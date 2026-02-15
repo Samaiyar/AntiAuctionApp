@@ -1,0 +1,117 @@
+<div class="minimal-container">
+    <div class="minimal-card">
+        <div class="minimal-header">
+            <h2>Create Profile</h2>
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="minimal-form">
+
+            <!-- Success Message -->
+            <div *ngIf="saveSuccess" class="success-alert">
+                Player profile saved successfully!
+            </div>
+
+            <!-- Error Message -->
+            <div *ngIf="saveError" class="error-alert">
+                {{ saveError }}
+            </div>
+
+            <!-- Profile Image Upload (Centered) -->
+            <div class="image-upload-container">
+                <label class="image-preview" for="imageUpload">
+                    <img *ngIf="imagePreview" [src]="imagePreview" alt="Profile Preview">
+                    <div *ngIf="!imagePreview" class="image-placeholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                        <span>Upload</span>
+                    </div>
+                </label>
+                <input type="file" id="imageUpload" class="image-upload-input" (change)="onImageSelected($event)"
+                    accept="image/*">
+                <label for="imageUpload" class="upload-label">Change Photo</label>
+            </div>
+
+            <!-- Name -->
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" formControlName="name" placeholder="e.g. Alex Chen">
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" formControlName="email" placeholder="name@example.com">
+            </div>
+
+            <!-- Skills (Checkboxes) -->
+            <div class="form-group">
+                <label>Skills</label>
+                <div class="checkbox-group" formGroupName="skills">
+                    <label class="checkbox-item">
+                        <input type="checkbox" formControlName="batting">
+                        <span>Batting</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" formControlName="bowling">
+                        <span>Bowling</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" formControlName="fielding">
+                        <span>Fielding</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Rating Dropdown -->
+            <div class="form-group">
+                <label for="rating">Rating</label>
+                <select id="rating" formControlName="rating">
+                    <option value="" disabled selected>Select Rating</option>
+                    <option *ngFor="let rate of ratings" [value]="rate">{{ rate }}</option>
+                </select>
+            </div>
+
+            <!-- Gender Dropdown -->
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" formControlName="gender">
+                    <option value="" disabled selected>Select Gender</option>
+                    <option *ngFor="let g of genders" [value]="g">{{ g }}</option>
+                </select>
+            </div>
+
+            <!-- Available On (Checkboxes) -->
+            <div class="form-group">
+                <label>Available On</label>
+                <div class="checkbox-group" formGroupName="availableOn">
+                    <label class="checkbox-item">
+                        <input type="checkbox" formControlName="weekdays">
+                        <span>Weekdays</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" formControlName="weekends">
+                        <span>Weekends</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" formControlName="evenings">
+                        <span>Evenings</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Bio -->
+            <div class="form-group">
+                <label for="bio">Bio</label>
+                <textarea id="bio" formControlName="bio" placeholder="Tell us a bit about yourself..."></textarea>
+            </div>
+
+            <button type="submit" [disabled]="profileForm.invalid || isSaving" class="btn-minimal">
+                {{ isSaving ? 'Saving...' : 'Save Profile' }}
+            </button>
+        </form>
+    </div>
+</div>
