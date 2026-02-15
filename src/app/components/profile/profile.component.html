@@ -1,4 +1,10 @@
 <div class="minimal-container">
+    <!-- Loading Overlay -->
+    <div *ngIf="isSaving" class="loading-overlay">
+        <div class="spinner"></div>
+        <p class="loading-text">Saving profile...</p>
+    </div>
+
     <div class="minimal-card">
         <div class="minimal-header">
             <h2>Create Profile</h2>

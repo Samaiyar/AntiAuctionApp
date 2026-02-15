@@ -1,0 +1,122 @@
+<div class="page-container">
+    <div class="page-header">
+        <h2>User Management</h2>
+        <div class="header-actions">
+            <!-- Search Bar -->
+            <div class="search-container">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="search-icon">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" placeholder="Search users..." [value]="searchTerm" (input)="onSearch($event)"
+                    class="search-input">
+            </div>
+            <span class="count-badge">{{ filteredPlayers.length }} Users</span>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading users...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-state">
+        <p>{{ error }}</p>
+    </div>
+
+    <!-- Data Table -->
+    <div *ngIf="!isLoading && !error" class="table-container">
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th class="th-user">User</th>
+                    <th>Email</th>
+                    <th>Role/Rating</th>
+                    <th>Skills</th>
+                    <th>Availability</th>
+                    <th>Status</th>
+                    <th class="th-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let player of filteredPlayers">
+                    <!-- User Column (Avatar + Name) -->
+                    <td class="td-user">
+                        <div class="avatar-cell">
+                            <img *ngIf="player.avatar_url" [src]="player.avatar_url" alt="{{ player.name }}"
+                                class="avatar-img">
+                            <div *ngIf="!player.avatar_url" class="avatar-placeholder">
+                                {{ getInitials(player.name) }}
+                            </div>
+                            <span class="user-name">{{ player.name }}</span>
+                        </div>
+                    </td>
+
+                    <!-- Email -->
+                    <td class="td-email">{{ player.email }}</td>
+
+                    <!-- Rating/Gender -->
+                    <td>
+                        <div class="rating-badge">{{ player.rating }}</div>
+                        <span class="gender-text">{{ player.gender }}</span>
+                    </td>
+
+                    <!-- Skills -->
+                    <td>
+                        <div class="skills-list">
+                            <span *ngFor="let skill of player.skills" class="skill-tag">{{ skill }}</span>
+                        </div>
+                    </td>
+
+                    <!-- Availability -->
+                    <td>
+                        <div class="avail-list">
+                            <span *ngFor="let avail of player.availability" class="avail-tag">{{ avail }}</span>
+                        </div>
+                    </td>
+
+                    <!-- Status (Mock for now, could be active based on created_at) -->
+                    <td>
+                        <span class="status-badge active">Active</span>
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="td-actions">
+                        <div class="actions-group">
+                            <button class="icon-btn edit-btn" (click)="editPlayer(player)" title="Edit User">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button class="icon-btn delete-btn" (click)="player.id && deletePlayer(player.id)"
+                                title="Delete User">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div *ngIf="filteredPlayers.length === 0" class="empty-state">
+            <p>No users found matching "{{ searchTerm }}".</p>
+        </div>
+    </div>
+</div>

@@ -30,6 +30,19 @@ export class PlayerService {
      * Creates a new player record in the database.
      */
     async createPlayer(player: Omit<Player, 'id' | 'created_at' | 'updated_at'>): Promise<Player> {
+        // Check if a player with this email already exists
+        const { data: existing, error: lookupError } = await this.supabase
+            .from('players')
+            .select('id')
+            .eq('email', player.email)
+            .maybeSingle();
+
+        if (lookupError) throw lookupError;
+
+        if (existing) {
+            throw new Error('A player with this email already exists. Please use a different email.');
+        }
+
         const { data, error } = await this.supabase
             .from('players')
             .insert(player)
@@ -92,5 +105,34 @@ export class PlayerService {
             .eq('id', id);
 
         if (error) throw error;
+    }
+
+    /**
+     * Uploads an avatar image to Supabase Storage.
+     * @param file The image file to upload
+     * @param email Player email used to create a unique path
+     * @returns The public URL of the uploaded image
+     */
+    async uploadAvatar(file: File, email: string): Promise<string> {
+        const fileExt = file.name.split('.').pop();
+        const sanitizedEmail = email.replace(/[^a-zA-Z0-9]/g, '_');
+        const fileName = `${sanitizedEmail}_${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        const { error: uploadError } = await this.supabase.storage
+            .from('player-avatars')
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: true
+            });
+
+        if (uploadError) throw uploadError;
+
+        // Get the public URL
+        const { data } = this.supabase.storage
+            .from('player-avatars')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
     }
 }

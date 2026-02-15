@@ -78,10 +78,20 @@ export class ProfileComponent {
         if (availGroup.weekends) availability.push('Weekends');
         if (availGroup.evenings) availability.push('Evenings');
 
+        // Upload avatar image if one was selected
+        let avatarUrl: string | null = null;
+        const imageFile = this.profileForm.value.image;
+        if (imageFile) {
+          avatarUrl = await this.playerService.uploadAvatar(
+            imageFile,
+            this.profileForm.value.email
+          );
+        }
+
         const playerData = {
           name: this.profileForm.value.name,
           email: this.profileForm.value.email,
-          avatar_url: null, // TODO: Upload image to Supabase Storage
+          avatar_url: avatarUrl,
           skills,
           rating: this.profileForm.value.rating,
           gender: this.profileForm.value.gender,
