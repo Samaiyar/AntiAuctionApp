@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Player, PlayerService } from '../../../services/player.service';
 
 @Component({
@@ -16,7 +17,7 @@ export class UserAdminComponent implements OnInit {
   error = '';
   searchTerm = '';
 
-  constructor(private playerService: PlayerService) { }
+  constructor(private playerService: PlayerService, private router: Router) { }
 
   async ngOnInit() {
     await this.loadPlayers();
@@ -57,7 +58,6 @@ export class UserAdminComponent implements OnInit {
     if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       try {
         await this.playerService.deletePlayer(id);
-        // Remove from local list
         this.players = this.players.filter(p => p.id !== id);
         this.filterPlayers();
       } catch (err: any) {
@@ -68,9 +68,7 @@ export class UserAdminComponent implements OnInit {
   }
 
   editPlayer(player: Player) {
-    // Placeholder for edit functionality
-    console.log('Edit player:', player);
-    alert(`Edit functionality for ${player.name} coming soon!`);
+    this.router.navigate(['/dashboard/admin/users/edit', player.id]);
   }
 
   getInitials(name: string): string {

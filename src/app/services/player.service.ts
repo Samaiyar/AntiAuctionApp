@@ -12,6 +12,10 @@ export interface Player {
     gender: string;
     availability: string[];
     bio?: string;
+    // Auction fields
+    team_id?: string | null;
+    base_price?: number;
+    sold_price?: number;
     created_at?: string;
     updated_at?: string;
 }
@@ -61,6 +65,21 @@ export class PlayerService {
             .from('players')
             .select('*')
             .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+    }
+
+    /**
+     * Searches players by name using ILIKE (case-insensitive partial match).
+     */
+    async searchPlayers(query: string): Promise<Player[]> {
+        const { data, error } = await this.supabase
+            .from('players')
+            .select('*')
+            .ilike('name', `%${query}%`)
+            .order('name', { ascending: true })
+            .limit(10);
 
         if (error) throw error;
         return data || [];

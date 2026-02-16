@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { PlayerService } from '../../services/player.service';
+import { AuctionService, AuctionCategory } from '../../services/auction.service';
 
 @Component({
   selector: 'app-profile',
@@ -10,19 +11,20 @@ import { PlayerService } from '../../services/player.service';
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
   profileForm: FormGroup;
   imagePreview: string | ArrayBuffer | null = null;
   isSaving = false;
   saveSuccess = false;
   saveError = '';
 
-  ratings: string[] = ['A+', 'A', 'B', 'C'];
+  categories: AuctionCategory[] = [];
   genders: string[] = ['Male', 'Female', 'Other'];
 
   constructor(
     private fb: FormBuilder,
-    private playerService: PlayerService
+    private playerService: PlayerService,
+    private auctionService: AuctionService
   ) {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
@@ -42,6 +44,14 @@ export class ProfileComponent {
       }),
       bio: ['', [Validators.maxLength(500)]]
     });
+  }
+
+  async ngOnInit() {
+    try {
+      this.categories = await this.auctionService.getCategories();
+    } catch (err) {
+      console.error('Error loading categories:', err);
+    }
   }
 
   onImageSelected(event: Event): void {
@@ -96,7 +106,8 @@ export class ProfileComponent {
           rating: this.profileForm.value.rating,
           gender: this.profileForm.value.gender,
           availability,
-          bio: this.profileForm.value.bio || ''
+          bio: this.profileForm.value.bio || '',
+          base_price: this.categories.find(c => c.name === this.profileForm.value.rating)?.base_price || 0
         };
 
         const result = await this.playerService.createPlayer(playerData);

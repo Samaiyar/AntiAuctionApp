@@ -1,0 +1,232 @@
+<div class="auction-container">
+    <!-- Teams Overview (when auction is not live) -->
+    <div *ngIf="!auctionService.isAuctionLive" class="teams-overview">
+        <div class="overview-header">
+            <div class="overview-title-row">
+                <h1 class="overview-title">🏆 Team Rosters</h1>
+                <div class="overview-status">
+                    <span class="status-dot"></span>
+                    Auction not live
+                </div>
+            </div>
+        </div>
+
+        <div class="overview-grid">
+            <div *ngFor="let team of teams" class="overview-team-card">
+                <div class="overview-team-header">
+                    <div class="overview-team-logo">
+                        <img *ngIf="team.logo_url" [src]="team.logo_url" alt="Logo">
+                        <span *ngIf="!team.logo_url">🏆</span>
+                    </div>
+                    <div>
+                        <h2 class="overview-team-name">{{ team.name }}</h2>
+                        <span class="overview-team-meta">{{ getTeamPlayers(team.id).length }} players · Budget: {{
+                            team.budget | currency:'USD':'symbol':'1.0-0' }}</span>
+                    </div>
+                </div>
+
+                <div class="overview-team-body" *ngIf="getTeamPlayers(team.id).length > 0; else noTeamPlayers">
+                    <table class="players-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Base Price</th>
+                                <th>Sold Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let player of getTeamPlayers(team.id)">
+                                <td>
+                                    <img class="modal-player-img"
+                                        [src]="player.avatar_url || 'assets/placeholder-player.png'" alt="">
+                                </td>
+                                <td class="modal-player-name">{{ player.name }}</td>
+                                <td>{{ player.rating || '-' }}</td>
+                                <td>{{ player.base_price | currency:'USD':'symbol':'1.0-0' }}</td>
+                                <td>{{ player.sold_price ? (player.sold_price | currency:'USD':'symbol':'1.0-0') : '-'
+                                    }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <ng-template #noTeamPlayers>
+                    <div class="overview-empty">No players acquired yet.</div>
+                </ng-template>
+            </div>
+        </div>
+    </div>
+    <!-- Left Column: Player Profile -->
+    <div class="column player-profile" *ngIf="auctionService.isAuctionLive">
+        <h2 class="section-title">Player Profile</h2>
+
+        <div class="player-nav">
+            <button (click)="prevPlayer()" [disabled]="currentIndex === 0" class="nav-btn">&lt; Prev</button>
+            <span class="player-counter" *ngIf="players.length > 0">{{ currentIndex + 1 }} / {{ players.length }}</span>
+            <button (click)="nextPlayer()" [disabled]="currentIndex === players.length - 1" class="nav-btn">Next
+                &gt;</button>
+        </div>
+
+        <div class="profile-card" *ngIf="currentPlayer; else noPlayer">
+            <div class="profile-image-container">
+                <img [src]="currentPlayer.avatar_url || 'assets/placeholder-player.png'" alt="Player Image"
+                    class="profile-image">
+            </div>
+            <div class="profile-details">
+                <h1 class="player-name">{{ currentPlayer.name }}</h1>
+                <div class="player-role">{{ currentPlayer.skills ? currentPlayer.skills[0] : '-' }}</div>
+
+                <div class="meta-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">Category</span>
+                        <span class="meta-value">{{ currentPlayer.rating || '-' }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Availability</span>
+                        <span class="meta-value">{{ currentPlayer.availability ? currentPlayer.availability.join(', ') :
+                            '-'
+                            }}</span>
+                    </div>
+                </div>
+
+                <div class="player-bio">
+                    <p>{{ currentPlayer.bio || 'No bio available.' }}</p>
+                </div>
+
+                <div *ngIf="currentPlayer.team_id" class="player-sold-banner">
+                    <div class="sold-label">SOLD TO</div>
+                    <div class="sold-team-name">{{ getSelectedTeamName() }}</div>
+                    <div class="sold-price">{{ currentPlayer.sold_price | currency:'USD':'symbol':'1.0-0' }}</div>
+                </div>
+            </div>
+        </div>
+        <ng-template #noPlayer>
+            <div class="no-player-msg">Loading players...</div>
+        </ng-template>
+    </div>
+
+    <!-- Center Column: Auction Controls -->
+    <div class="column auction-controls" *ngIf="auctionService.isAuctionLive">
+        <h2 class="section-title">Auction</h2>
+
+        <div class="timer-display" [class.urgent]="timer < 10">
+            {{ formatTime(timer) }}
+        </div>
+
+        <div class="current-bid-container">
+            <div class="bid-label">Current Bid</div>
+            <div class="bid-amount">{{ currentBid | currency:'USD':'symbol':'1.0-0' }}</div>
+        </div>
+
+        <div class="bid-actions" *ngIf="currentPlayer && !currentPlayer.team_id">
+            <button class="btn-circle" (click)="adjustBid(-bidStep)" [disabled]="currentBid <= basePrice">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <div class="bid-step-info">
+                <span>Next Bid</span>
+                <strong>{{ (currentBid + bidStep) | currency:'USD':'symbol':'1.0-0' }}</strong>
+            </div>
+            <button class="btn-circle btn-primary" (click)="adjustBid(bidStep)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div *ngIf="currentPlayer?.team_id" class="sold-status">
+            SOLD for {{ currentPlayer?.sold_price | currency:'USD':'symbol':'1.0-0' }}
+        </div>
+
+        <button *ngIf="currentPlayer?.team_id" class="btn-control release-btn" (click)="releasePlayer()">
+            Release Player
+        </button>
+
+        <div class="team-selector" *ngIf="!currentPlayer?.team_id">
+            <label>Select Winning Team</label>
+            <select [(ngModel)]="selectedTeamId" class="team-dropdown">
+                <option [ngValue]="null" disabled>Select Team</option>
+                <option *ngFor="let team of teams" [value]="team.id">{{ team.name }}</option>
+            </select>
+        </div>
+
+        <button class="btn-control action-btn" [disabled]="!selectedTeamId || !currentPlayer || currentPlayer.team_id"
+            (click)="sellPlayer()" *ngIf="!currentPlayer?.team_id">
+            SOLD to {{ getSelectedTeamName() }}
+        </button>
+    </div>
+
+    <!-- Right Column: Team Stats -->
+    <div class="column team-stats" *ngIf="auctionService.isAuctionLive">
+        <h2 class="section-title">Team Stats</h2>
+        <div class="team-list">
+            <div *ngFor="let team of teams" class="team-stat-card" [class.selected]="selectedTeamId === team.id"
+                (click)="openTeamModal(team)" style="cursor: pointer;">
+                <div class="team-header">
+                    <div class="team-logo">
+                        <img *ngIf="team.logo_url" [src]="team.logo_url" alt="Logo">
+                        <span *ngIf="!team.logo_url">🏆</span>
+                    </div>
+                    <div class="team-info-header">
+                        <h3 class="team-name-small">{{ team.name }}</h3>
+                        <span class="player-count">{{ team.players_count || 0 }}/25 players</span>
+                    </div>
+                </div>
+
+                <div class="budget-info">
+                    <div class="budget-labels">
+                        <span>Remaining Budget</span>
+                        <span>{{ team.budget | currency:'USD':'symbol':'1.0-0' }}</span>
+                    </div>
+                    <div class="budget-progress-bar">
+                        <div class="progress-fill" [style.width.%]="(team.budget / initialBudget) * 100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Players Modal -->
+<div class="modal-overlay" *ngIf="showTeamModal" (click)="closeTeamModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h2>{{ modalTeam?.name }} — Squad</h2>
+            <button class="modal-close" (click)="closeTeamModal()">✕</button>
+        </div>
+
+        <div class="modal-body" *ngIf="modalPlayers.length > 0; else noPlayers">
+            <table class="players-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Base Price</th>
+                        <th>Sold Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let player of modalPlayers">
+                        <td>
+                            <img class="modal-player-img" [src]="player.avatar_url || 'assets/placeholder-player.png'"
+                                alt="">
+                        </td>
+                        <td class="modal-player-name">{{ player.name }}</td>
+                        <td>{{ player.rating || '-' }}</td>
+                        <td>{{ player.base_price | currency:'USD':'symbol':'1.0-0' }}</td>
+                        <td>{{ player.sold_price ? (player.sold_price | currency:'USD':'symbol':'1.0-0') : '-' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <ng-template #noPlayers>
+            <div class="modal-empty">No players in this team yet.</div>
+        </ng-template>
+    </div>
+</div>

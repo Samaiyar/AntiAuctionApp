@@ -1,7 +1,7 @@
 import { Injectable, Injector } from '@angular/core';
 import { createClient, SupabaseClient, User, AuthResponse } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
 import { Router } from '@angular/router';
 
 @Injectable({
@@ -12,12 +12,24 @@ export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null> = new BehaviorSubject<User | null>(null);
   public currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
 
+  /** Emits true once the initial session has been checked. Guards should wait for this. */
+  private initializedSubject = new ReplaySubject<boolean>(1);
+  public isInitialized$ = this.initializedSubject.asObservable();
+
+  /** Expose the Supabase client so other services can share the same authenticated session. */
+  get client(): SupabaseClient {
+    return this.supabase;
+  }
+
   constructor(private injector: Injector) {
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
 
     // Initialize user session
     this.supabase.auth.getUser().then(({ data: { user } }) => {
       this.currentUserSubject.next(user);
+      this.initializedSubject.next(true);
+    }).catch(() => {
+      this.initializedSubject.next(true);
     });
 
     // Listen for auth changes

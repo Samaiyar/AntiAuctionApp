@@ -85,7 +85,49 @@
     <main class="main-content">
         <header class="top-header">
             <h2>Dashboard</h2>
+
+            <!-- Player Search (visible only during auction) -->
+            <div *ngIf="isAuctionLive" class="player-search-container">
+                <div class="search-input-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="search-icon">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" [(ngModel)]="searchQuery" (input)="onSearchInput()" (blur)="closeResults()"
+                        placeholder="Search player by name..." class="player-search-input" autocomplete="off">
+                    <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">✕</button>
+                </div>
+
+                <!-- Autocomplete Dropdown -->
+                <div *ngIf="showResults" class="search-dropdown">
+                    <div *ngFor="let player of searchResults" class="search-result-item"
+                        (mousedown)="selectPlayer(player)">
+                        <div class="result-avatar">
+                            <img *ngIf="player.avatar_url" [src]="player.avatar_url" [alt]="player.name">
+                            <span *ngIf="!player.avatar_url" class="result-avatar-fallback">
+                                {{ player.name.charAt(0).toUpperCase() }}
+                            </span>
+                        </div>
+                        <div class="result-info">
+                            <span class="result-name">{{ player.name }}</span>
+                            <span class="result-meta">{{ player.rating || 'Uncategorized' }} · ₹{{ player.base_price ||
+                                0 }}</span>
+                        </div>
+                    </div>
+                    <div *ngIf="searchResults.length === 0" class="search-no-results">
+                        No players found
+                    </div>
+                </div>
+            </div>
+
             <div class="header-actions">
+                <!-- Auction Toggle -->
+                <button class="auction-toggle" [ngClass]="{'live': isAuctionLive}" (click)="toggleAuction()">
+                    <span class="toggle-dot"></span>
+                    {{ isAuctionLive ? 'Auction Live' : 'Start Auction' }}
+                </button>
                 <a routerLink="/profile" class="profile-link">My Profile</a>
             </div>
         </header>
